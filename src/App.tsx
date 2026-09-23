@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { BarChart3, Home as HomeIcon, Package, ShoppingCart, Users } from 'lucide-react'
 import { Toasts } from './components/ui'
 import { Sidebar, Topbar } from './components/Shell'
+import LottieAnimation from './components/LottieAnimation'
 import { useTheme } from './lib/theme'
 import { useSession } from './lib/session'
 import { auth, firebaseEnabled } from './lib/firebase'
@@ -19,6 +20,7 @@ import Assistant from './pages/Assistant'
 import Orders from './pages/Orders'
 import Suppliers from './pages/Suppliers'
 import SettingsPage from './pages/Settings'
+import Talents from './pages/Talents'
 
 const tabs = [
   { to: '/', label: 'Accueil', icon: HomeIcon },
@@ -37,12 +39,19 @@ export default function App() {
   const [dataReady, setDataReady] = useState(!firebaseEnabled)
 
   // Firebase : l'état de connexion vient de Firebase (il survit aux rechargements et aux onglets).
+  // onAuthStateChanged ne renvoie jamais le nom/e-mail Google dans l'interface : pour un compte
+  // Google, un libellé générique est utilisé (voir signInWithGoogle dans lib/auth.ts).
   useEffect(() => {
     if (!auth) return
     return onAuthStateChanged(auth, (u) => {
       const s = useSession.getState()
-      if (u) s.login(u.displayName || s.user || 'Utilisateur', u.uid)
-      else s.logout()
+      console.info('[KOMERCE][diag] onAuthStateChanged → utilisateur connecté :', Boolean(u))
+      if (u) {
+        const isGoogle = u.providerData.some((p) => p.providerId === 'google.com')
+        s.login(isGoogle ? 'Utilisateur' : u.displayName || s.user || 'Utilisateur', u.uid)
+      } else {
+        s.logout()
+      }
       setAuthReady(true)
     })
   }, [])
@@ -67,12 +76,9 @@ export default function App() {
 
   if (!authReady || (user && !dataReady))
     return (
-      <div className="anim-fade flex min-h-dvh flex-col items-center justify-center gap-5">
-        <div className="relative flex h-28 w-28 items-center justify-center">
-          <span className="absolute inset-0 animate-spin rounded-full border-4 border-brand-100 border-t-brand-600" />
-          <img src="/logo-mark.png" alt="" className="anim-scale h-14 w-14 object-contain" />
-        </div>
-        <p className="anim-up text-sm font-semibold text-black/50" style={{ '--d': '0.15s' } as React.CSSProperties}>
+      <div className="anim-fade flex min-h-dvh flex-col items-center justify-center gap-2">
+        <LottieAnimation className="h-52 w-52 sm:h-64 sm:w-64" />
+        <p className="anim-up -mt-2 text-sm font-semibold text-black/50" style={{ '--d': '0.15s' } as React.CSSProperties}>
           {user ? 'Chargement de vos données…' : 'Chargement…'}
         </p>
       </div>
@@ -93,7 +99,7 @@ export default function App() {
       <div className="mx-auto max-w-md px-4 pb-32 pt-5 lg:ml-[16.5rem] lg:max-w-none lg:px-6 lg:pb-8 lg:pt-4">
         <Topbar />
         <div className="mx-auto max-w-[1400px]">
-          <motion.div key={pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className={pathname === '/' || pathname === '/commandes' ? '' : 'lg:max-w-3xl'}>
+          <motion.div key={pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className={pathname === '/' || pathname === '/commandes' || pathname === '/talents' ? '' : 'lg:max-w-3xl'}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/stock" element={<Stock />} />
@@ -104,6 +110,7 @@ export default function App() {
               <Route path="/analyse" element={<Analytics />} />
               <Route path="/assistant" element={<Assistant />} />
               <Route path="/parametres" element={<SettingsPage />} />
+              <Route path="/talents" element={<Talents />} />
             </Routes>
           </motion.div>
         </div>

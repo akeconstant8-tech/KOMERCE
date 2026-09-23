@@ -340,8 +340,8 @@ export default function Home() {
                 ))}
               </ul>
             </div>
-            <Link to="/parametres" className="relative mt-5 inline-flex items-center justify-between gap-2 self-start rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-brand-700 active:scale-95">
-              Découvrir KOMERCE PRO <ChevronRight size={16} />
+            <Link to="/talents" className="relative mt-5 inline-flex items-center justify-between gap-2 self-start rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-brand-700 active:scale-95">
+              Découvrir KOMERCE <ChevronRight size={16} />
             </Link>
           </div>
         </Reveal>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Bell, CalendarDays, ChevronDown, ClipboardList, Crown, Home, MessageCircle, Moon, Package, Search, Settings, ShoppingCart, Sparkles, Truck, Users, Wallet, Check, LogOut } from 'lucide-react'
+import { Bell, CalendarDays, ChevronDown, ClipboardList, Compass, Crown, Home, MessageCircle, Moon, Package, Search, Settings, ShoppingCart, Sparkles, Truck, Users, Wallet, Check, LogOut } from 'lucide-react'
 import { useStore } from '../lib/store'
 import { useTheme } from '../lib/theme'
 import { useToasts } from '../lib/toast'
@@ -37,6 +37,7 @@ const links = [
   { to: '/fournisseurs', label: 'Fournisseurs', icon: Truck },
   { to: '/analyse', label: 'Finances', icon: Wallet },
   { to: '/assistant', label: 'Assistant IA', icon: Sparkles },
+  { to: '/talents', label: 'Découvrir', icon: Compass },
   { to: '/parametres', label: 'Paramètres', icon: Settings },
 ]
 

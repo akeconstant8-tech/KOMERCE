@@ -5,7 +5,7 @@ import {
   setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile,
 } from 'firebase/auth'
 import { uid } from './format'
-import { auth, firebaseEnabled } from './firebase'
+import { auth, firebaseEnabled, missingFirebaseEnv } from './firebase'
 
 interface Account {
   id: string
@@ -78,8 +78,16 @@ async function localSignIn(input: { phone: string; password: string }): Promise<
 
 const emailOf = (phone: string) => `${normPhone(phone)}@phone.komerce.app`
 
+/**
+ * Traduit une erreur Firebase en message simple pour l'utilisateur.
+ * L'erreur technique complète n'est jamais affichée dans l'interface : elle part
+ * uniquement dans la console (utile en développement, invisible pour l'utilisateur).
+ */
 const firebaseError = (e: unknown): string => {
   const code = (e as { code?: string })?.code ?? ''
+  // L'erreur Firebase réelle (code + message) va dans la console ; l'interface n'affiche qu'un message simple.
+  // customData n'est volontairement pas journalisé : il peut contenir l'e-mail de l'utilisateur.
+  console.error('[KOMERCE][auth] erreur Firebase :', { code: code || '(sans code)', message: (e as { message?: string })?.message })
   if (code === 'auth/email-already-in-use') return 'Un compte existe déjà avec ce numéro.'
   if (['auth/invalid-credential', 'auth/user-not-found', 'auth/wrong-password', 'auth/invalid-login-credentials'].includes(code))
     return 'Numéro ou mot de passe incorrect.'
@@ -88,7 +96,9 @@ const firebaseError = (e: unknown): string => {
   if (code === 'auth/too-many-requests') return 'Trop de tentatives. Réessayez dans quelques minutes.'
   if (code === 'auth/operation-not-allowed') return "Ce mode de connexion n'est pas activé dans la console Firebase."
   if (code === 'auth/unauthorized-domain') return "Ce domaine n'est pas autorisé dans Firebase (Authentication > Paramètres)."
-  return 'Connexion impossible. Réessayez.'
+  if (code === 'auth/popup-blocked') return 'La fenêtre de connexion a été bloquée par votre navigateur. Autorisez les pop-ups et réessayez.'
+  if (code === 'auth/account-exists-with-different-credential') return 'Ce compte utilise déjà un autre mode de connexion.'
+  return 'Connexion impossible. Veuillez réessayer.'
 }
 
 async function persistFor(remember: boolean) {
@@ -120,16 +130,29 @@ async function cloudSignIn(input: { phone: string; password: string }, remember:
   }
 }
 
-/** Connexion Google (Firebase uniquement). Une erreur vide signifie « fenêtre fermée par l'utilisateur ». */
+/**
+ * Connexion Google (Firebase uniquement, ouverte à tout compte Google — aucune
+ * restriction de domaine). On ne récupère que l'identifiant Firebase (uid) nécessaire
+ * à la session : nom, e-mail, photo et jeton Google ne sont ni conservés ni affichés.
+ * Une erreur vide signifie « fenêtre fermée par l'utilisateur » (pas une vraie erreur).
+ */
 export async function signInWithGoogle(remember = true): Promise<AuthResult> {
-  if (!firebaseEnabled) return { ok: false, error: 'La connexion Google nécessite Firebase.' }
+  if (!firebaseEnabled) {
+    console.error('[KOMERCE][diag] Connexion Google impossible : Firebase désactivé, variables absentes du build →', missingFirebaseEnv.join(', '))
+    return { ok: false, error: 'La connexion Google nécessite Firebase.' }
+  }
+  console.info('[KOMERCE][diag] Connexion Google : ouverture de la fenêtre (signInWithPopup)…')
   try {
     await persistFor(remember)
     const cred = await signInWithPopup(auth!, new GoogleAuthProvider())
-    return { ok: true, id: cred.user.uid, name: cred.user.displayName || 'Utilisateur' }
+    console.info('[KOMERCE][diag] Connexion Google réussie (UID récupéré)')
+    return { ok: true, id: cred.user.uid, name: 'Utilisateur' }
   } catch (e) {
     const code = (e as { code?: string })?.code ?? ''
-    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return { ok: false, error: '' }
+    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+      console.warn('[KOMERCE][diag] Fenêtre Google fermée avant la fin de la connexion :', code)
+      return { ok: false, error: '' }
+    }
     return { ok: false, error: firebaseError(e) }
   }
 }
