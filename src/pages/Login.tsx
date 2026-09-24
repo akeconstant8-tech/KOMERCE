@@ -78,9 +78,9 @@ const trust = [
 ] as const
 
 const showcase = [
-  { src: '/images/produits.jpg', title: 'Gérez vos produits', icon: ShoppingCart },
-  { src: '/images/ventes.jpg', title: 'Suivez vos ventes', icon: BarChart3 },
-  { src: '/images/stock.jpg', title: 'Contrôlez votre stock', icon: Package },
+  { src: '/images/produits.jpeg', title: 'Gérez vos produits', icon: ShoppingCart },
+  { src: '/images/vente.jpeg', title: 'Suivez vos ventes', icon: BarChart3 },
+  { src: '/images/stock.jpeg', title: 'Contrôlez votre stock', icon: Package },
 ]
 
 /** Cercles décoratifs : mouvements très lents, sans effet sur la mise en page. */
@@ -182,24 +182,34 @@ export default function Login() {
         </div>
       </header>
 
-      <div className="grid flex-1 lg:grid-cols-[1fr_1.15fr]">
+      <div className="grid flex-1 lg:grid-cols-[1.3fr_1fr] xl:grid-cols-[1.5fr_1fr]">
         {/* ---------- Panneau visuel (ordinateur) : photo du commerce ---------- */}
-        <aside className="anim-left relative hidden overflow-hidden text-white lg:block lg:rounded-r-[3.5rem]">
+        <aside className="anim-left relative hidden overflow-hidden bg-brand-900 text-white lg:flex lg:flex-col lg:justify-between lg:rounded-r-[3.5rem]">
+          {/* Fond : la même photo, agrandie et floutée, pour remplir toute la zone sans rien déformer */}
           <SmartImage
-            src="/images/hero-commerce.jpg"
-            alt="Un commerce géré avec KOMERCE"
-            className="absolute inset-0 h-full w-full object-cover"
-            icon={<ShoppingCart size={48} />}
-            hint="images/hero-commerce.jpg"
+            src="/images/produits.jpeg"
+            alt=""
+            className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover blur-2xl"
             fallback="hero"
           />
-          {/* Superposition sombre : garde le texte lisible quelle que soit la photo */}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/40" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/60" />
 
-          <p className="anim-up absolute inset-x-10 bottom-12 text-4xl font-extrabold leading-[1.05] tracking-tight drop-shadow-[0_4px_18px_rgba(0,0,0,0.5)] xl:inset-x-12 xl:text-5xl" style={delay(0.3)}>
+          <p className="anim-up relative p-10 text-4xl font-extrabold leading-[1.05] tracking-tight drop-shadow-[0_4px_18px_rgba(0,0,0,0.5)] xl:p-12 xl:text-5xl" style={delay(0.3)}>
             Gérez.<br />Vendez.<br />Progressez&nbsp;!
             <span className="mt-3 block h-1 w-16 rounded-full bg-gold-400" />
           </p>
+
+          {/* Photo entière, d'un bord à l'autre du panneau (légende comprise, jamais recadrée) : la plus grande possible */}
+          <div className="anim-scale relative mb-14 overflow-hidden border-y-4 border-white/85 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.75)]" style={delay(0.35)}>
+            <SmartImage
+              src="/images/produits.jpeg"
+              alt="Gérez vos produits : alimentaire, boissons, produits d'entretien, vêtements, accessoires"
+              className="aspect-[2/1] w-full object-cover"
+              icon={<ShoppingCart size={48} />}
+              hint="images/produits.jpeg"
+              fallback="hero"
+            />
+          </div>
         </aside>
 
         {/* ---------- Formulaire ---------- */}
@@ -392,7 +402,7 @@ export default function Login() {
       </div>
 
       {/* ---------- Vitrine : trois images de l'application ---------- */}
-      <div className="mx-auto mt-2 w-full max-w-5xl px-4 sm:px-8 lg:mt-4">
+      <div className="mx-auto mt-2 w-full max-w-6xl px-4 sm:px-8 lg:mt-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {showcase.map(({ src, title, icon: Icon }, i) => (
             <div
@@ -400,20 +410,14 @@ export default function Login() {
               className="anim-up group relative overflow-hidden rounded-3xl shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_44px_-16px_rgb(11_122_66/0.45)]"
               style={delay(0.1 + i * 0.1)}
             >
+              {/* Ces images contiennent déjà leur légende : on les montre entières (ratio 2:1), sans texte superposé. */}
               <SmartImage
                 src={src}
                 alt={title}
-                className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-[1.06] sm:h-48"
+                className="aspect-[2/1] w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                 icon={<Icon size={26} />}
                 hint={src.replace('/', '')}
               />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 flex items-center gap-2.5 p-4">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold-400 text-brand-900 shadow-md transition-transform duration-300 group-hover:scale-110">
-                  <Icon size={17} />
-                </span>
-                <span className="text-sm font-extrabold uppercase tracking-wide text-white drop-shadow-sm">{title}</span>
-              </div>
             </div>
           ))}
         </div>
